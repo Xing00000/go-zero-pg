@@ -1,0 +1,88 @@
+version: '3'
+
+networks:
+  app-tier:
+    driver: bridge
+volumes: 
+  database-data: # named volumes can be managed easier using docker-compose
+  redis-data:
+
+services:
+  etcd:
+    image: 'quay.io/coreos/etcd:v3.5.4'
+    container_name: etcd1       # 容器名 --name 
+    restart: always             # 总是重启
+    networks:
+      - app-tier                # 使用的网络 --network
+    ports:                      # 端口映射 -p
+      - 2379:2379
+      - 2380:2380
+    environment:                # 环境变量 --env
+      - ALLOW_NONE_AUTHENTICATION=yes                       # 允许不用密码登录
+      - ETCD_NAME=etcd1                                     # etcd 的名字
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd1:2380  # 列出这个成员的伙伴 URL 以便通告给集群的其他成员
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380           # 用于监听伙伴通讯的URL列表
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379         # 用于监听客户端通讯的URL列表
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379        # 列出这个成员的客户端URL，通告给集群中的其他成员
+      # - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster             # 在启动期间用于 etcd 集群的初始化集群记号
+      # - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380        # 为启动初始化集群配置
+      # - ETCD_INITIAL_CLUSTER_STATE=new                      # 初始化集群状态
+      - ETCDCTL_API=3                                       # 升级api版本，使用最新的v3 API
+      - TZ=Asia/Taipei
+  postgres:
+    image: postgres:latest
+    networks:
+      - app-tier                # 使用的网络 --network
+    environment:
+      - POSTGRES_PASSWORD=postgrespw
+      - TZ=Asia/Taipei
+    ports:
+      - 5432:5432
+    volumes:
+      - database-data:/var/lib/postgresql/data
+  redis:
+    image: redis:6.2.5
+    container_name: book_store_redis
+    ports:
+      - 6379:6379
+    environment:
+      # 时区上海 - Time zone Shanghai (Change if needed)
+      - TZ=Asia/Taipei
+    volumes:
+      # 数据文件 - data files
+      - redis-data:/data:rw
+    # command: "redis-server --requirepass G62m50oigInC30sf  --appendonly yes"
+    # privileged: true
+    restart: always
+    networks:
+      - app-tier
+  api:
+    container_name: book_store_api_container
+    networks:
+      - app-tier
+    image: book_store_api:v1
+    environment:
+      - TZ=Asia/Taipei
+    restart: always
+    ports:
+      - 8888:8888
+  add_rpc:
+    container_name: add_rpc_container
+    environment:
+      - TZ=Asia/Taipei
+    networks:
+      - app-tier
+    image: add_rpc:v1
+    restart: always
+    ports:
+      - 8080:8080
+  check_rpc:
+    container_name: check_rpc_container
+    environment:
+      - TZ=Asia/Taipei
+    networks:
+      - app-tier
+    image: check_rpc:v1
+    restart: always
+    ports:
+      - 8081:8081

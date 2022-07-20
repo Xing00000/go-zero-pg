@@ -1,12 +1,12 @@
 Name: check.rpc
-ListenOn: 127.0.0.1:8081
+ListenOn: 0.0.0.0:8081
 Etcd:
   Hosts:
-  - 127.0.0.1:2379
+    - etcd:2379
   Key: check.rpc
-DataSource: postgres://postgres:postgrespw@localhost:55000/gozero?sslmode=disable
+DataSource: postgres://postgres:postgrespw@postgres:5432/gozero?sslmode=disable
 Table: book
 Cache:
-  - Host: localhost:6379
+    - Host: host.docker.internal:6379
 Log:
   Level: error
