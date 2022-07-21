@@ -5,7 +5,6 @@ import (
 
 	"bookstore/api/internal/svc"
 	"bookstore/api/internal/types"
-	"bookstore/rpc/check/checker"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -26,17 +25,22 @@ func NewCheckLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CheckLogic 
 
 func (l *CheckLogic) Check(req *types.CheckReq) (resp *types.CheckResp, err error) {
 	// 手动代码开始
-	r, err := l.svcCtx.Checker.Check(l.ctx, &checker.CheckReq{
-		Book: req.Book,
-	})
-	if err != nil {
-		logx.Error(err)
-		return &types.CheckResp{}, err
-	}
+	// r, err := l.svcCtx.Checker.Check(l.ctx, &checker.CheckReq{
+	// 	Book: req.Book,
+	// })
+	// if err != nil {
+	// 	logx.Error(err)
+	// 	return &types.CheckResp{}, err
+	// }
 
-	return &types.CheckResp{
-		Found: r.Found,
-		Price: r.Price,
-	}, nil
+	// return &types.CheckResp{
+	// 	Found: r.Found,
+	// 	Price: r.Price,
+	// }, nil
 	// 手动代码结束
+	return &types.CheckResp{
+		Found: true,
+		Price: 100,
+	}, nil
+
 }
