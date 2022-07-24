@@ -2,7 +2,7 @@ Name: check.rpc
 ListenOn: 127.0.0.1:8081
 Etcd:
   Hosts:
-    - 127.0.0.1:2379
+    - localhost:12379
   Key: check.rpc
 DataSource: postgres://postgres:postgrespw@postgres:5432/gozero?sslmode=disable
 Table: book

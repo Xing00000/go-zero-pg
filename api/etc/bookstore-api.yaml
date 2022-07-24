@@ -9,7 +9,7 @@ Port: 8888
 Check:
   Etcd:
     Hosts:
-      - localhost:2379
+      - localhost:12379
     Key: check.rpc
 Log:
   Level: error

@@ -1,88 +1,198 @@
 version: '3'
 
 networks:
-  app-tier:
+  cluster_net:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 172.16.238.0/24
 volumes: 
-  database-data: # named volumes can be managed easier using docker-compose
-  redis-data:
+  # database-data: # named volumes can be managed easier using docker-compose
+  # redis-data:
+  node1-data:
+  node2-data:
+  node3-data:
 
 services:
-  etcd:
-    image: 'quay.io/coreos/etcd:v3.5.4'
-    container_name: etcd1       # 容器名 --name 
-    restart: always             # 总是重启
-    networks:
-      - app-tier                # 使用的网络 --network
-    ports:                      # 端口映射 -p
-      - 2379:2379
-      - 2380:2380
-    environment:                # 环境变量 --env
-      - ALLOW_NONE_AUTHENTICATION=yes                       # 允许不用密码登录
-      - ETCD_NAME=etcd1                                     # etcd 的名字
-      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd1:2380  # 列出这个成员的伙伴 URL 以便通告给集群的其他成员
-      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380           # 用于监听伙伴通讯的URL列表
-      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379         # 用于监听客户端通讯的URL列表
-      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379        # 列出这个成员的客户端URL，通告给集群中的其他成员
-      # - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster             # 在启动期间用于 etcd 集群的初始化集群记号
-      # - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380        # 为启动初始化集群配置
-      # - ETCD_INITIAL_CLUSTER_STATE=new                      # 初始化集群状态
-      - ETCDCTL_API=3                                       # 升级api版本，使用最新的v3 API
-      - TZ=Asia/Taipei
-  postgres:
-    image: postgres:latest
-    networks:
-      - app-tier                # 使用的网络 --network
-    environment:
-      - POSTGRES_PASSWORD=postgrespw
-      - TZ=Asia/Taipei
-    ports:
-      - 5432:5432
+  node1:
+    image: quay.io/coreos/etcd:v3.5.4
     volumes:
-      - database-data:/var/lib/postgresql/data
-  redis:
-    image: redis:6.2.5
-    container_name: book_store_redis
+      - node1-data:/etcd-data
     ports:
-      - 6379:6379
+      - "12379:2379"
+    expose:
+      - 2379
+      - 2380
+    networks:
+      cluster_net:
+        ipv4_address: 172.16.238.100
     environment:
-      # 时区上海 - Time zone Shanghai (Change if needed)
-      - TZ=Asia/Taipei
+      - ETCDCTL_API=3
+    command:
+      - /usr/local/bin/etcd
+      - --data-dir=/etcd-data
+      - --name
+      - node1
+      - --initial-advertise-peer-urls
+      - http://172.16.238.100:2380
+      - --listen-peer-urls
+      - http://0.0.0.0:2380
+      - --advertise-client-urls
+      - http://172.16.238.100:2379
+      - --listen-client-urls
+      - http://0.0.0.0:2379
+      - --initial-cluster
+      - node1=http://172.16.238.100:2380,node2=http://172.16.238.101:2380,node3=http://172.16.238.102:2380
+      - --initial-cluster-state
+      - new
+      - --initial-cluster-token
+      - docker-etcd
+
+  node2:
+    image: quay.io/coreos/etcd:v3.5.4
     volumes:
-      # 数据文件 - data files
-      - redis-data:/data:rw
-    # command: "redis-server --requirepass G62m50oigInC30sf  --appendonly yes"
-    # privileged: true
-    restart: always
+      - node2-data:/etcd-data
     networks:
-      - app-tier
-  api:
-    container_name: book_store_api_container
-    networks:
-      - app-tier
-    image: book_store_api:v1
+      cluster_net:
+        ipv4_address: 172.16.238.101
     environment:
-      - TZ=Asia/Taipei
-    restart: always
+      - ETCDCTL_API=3
     ports:
-      - 8888:8888
-  add_rpc:
-    container_name: add_rpc_container
-    environment:
-      - TZ=Asia/Taipei
+      - "12380:2379"
+    expose:
+      - 2379
+      - 2380
+    command:
+      - /usr/local/bin/etcd
+      - --data-dir=/etcd-data
+      - --name
+      - node2
+      - --initial-advertise-peer-urls
+      - http://172.16.238.101:2380
+      - --listen-peer-urls
+      - http://0.0.0.0:2380
+      - --advertise-client-urls
+      - http://172.16.238.101:2379
+      - --listen-client-urls
+      - http://0.0.0.0:2379
+      - --initial-cluster
+      - node1=http://172.16.238.100:2380,node2=http://172.16.238.101:2380,node3=http://172.16.238.102:2380
+      - --initial-cluster-state
+      - new
+      - --initial-cluster-token
+      - docker-etcd
+
+  node3:
+    image: quay.io/coreos/etcd:v3.5.4
+    volumes:
+      - node3-data:/etcd-data
     networks:
-      - app-tier
-    image: add_rpc:v1
-    restart: always
-    ports:
-      - 8080:8080
-  check_rpc:
-    container_name: check_rpc_container
+      cluster_net:
+        ipv4_address: 172.16.238.102
     environment:
-      - TZ=Asia/Taipei
-    networks:
-      - app-tier
-    image: check_rpc:v1
-    restart: always
+      - ETCDCTL_API=3
     ports:
-      - 8081:8081
+      - "12381:2379"
+    expose:
+      - 2379
+      - 2380
+    command:
+      - /usr/local/bin/etcd
+      - --data-dir=/etcd-data
+      - --name
+      - node3
+      - --initial-advertise-peer-urls
+      - http://172.16.238.102:2380
+      - --listen-peer-urls
+      - http://0.0.0.0:2380
+      - --advertise-client-urls
+      - http://172.16.238.102:2379
+      - --listen-client-urls
+      - http://0.0.0.0:2379
+      - --initial-cluster
+      - node1=http://172.16.238.100:2380,node2=http://172.16.238.101:2380,node3=http://172.16.238.102:2380
+      - --initial-cluster-state
+      - new
+      - --initial-cluster-token
+      - docker-etcd
+
+  # etcd:
+  #   image: 'quay.io/coreos/etcd:v3.5.4'
+  #   container_name: etcd1       # 容器名 --name 
+  #   restart: always             # 总是重启
+  #   networks:
+  #     - app-tier                # 使用的网络 --network
+  #   ports:                      # 端口映射 -p
+  #     - 2379:2379
+  #     - 2380:2380
+  #   environment:                # 环境变量 --env
+  #     - ALLOW_NONE_AUTHENTICATION=yes                       # 允许不用密码登录
+  #     - ETCD_NAME=etcd1                                     # etcd 的名字
+  #     - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd1:2380  # 列出这个成员的伙伴 URL 以便通告给集群的其他成员
+  #     - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380           # 用于监听伙伴通讯的URL列表
+  #     - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379         # 用于监听客户端通讯的URL列表
+  #     - ETCD_ADVERTISE_CLIENT_URLS=http://etcd1:2379        # 列出这个成员的客户端URL，通告给集群中的其他成员
+  #     # - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster             # 在启动期间用于 etcd 集群的初始化集群记号
+  #     # - ETCD_INITIAL_CLUSTER=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380        # 为启动初始化集群配置
+  #     # - ETCD_INITIAL_CLUSTER_STATE=new                      # 初始化集群状态
+  #     - ETCDCTL_API=3                                       # 升级api版本，使用最新的v3 API
+  #     - TZ=Asia/Taipei
+  # postgres:
+  #   image: postgres:latest
+  #   networks:
+  #     - app-tier                # 使用的网络 --network
+  #   environment:
+  #     - POSTGRES_PASSWORD=postgrespw
+  #     - TZ=Asia/Taipei
+  #   ports:
+  #     - 5432:5432
+  #   volumes:
+  #     - database-data:/var/lib/postgresql/data
+  # redis:
+  #   image: redis:6.2.5
+  #   container_name: book_store_redis
+  #   ports:
+  #     - 6379:6379
+  #   environment:
+  #     # 时区上海 - Time zone Shanghai (Change if needed)
+  #     - TZ=Asia/Taipei
+  #   volumes:
+  #     # 数据文件 - data files
+  #     - redis-data:/data:rw
+  #   # command: "redis-server --requirepass G62m50oigInC30sf  --appendonly yes"
+  #   # privileged: true
+  #   restart: always
+  #   networks:
+  #     - app-tier
+  # api:
+  #   container_name: book_store_api_container
+  #   networks:
+  #     - app-tier
+  #   image: book_store_api:v1
+  #   environment:
+  #     - TZ=Asia/Taipei
+  #   restart: always
+  #   ports:
+  #     - 8888:8888
+  # add_rpc:
+  #   container_name: add_rpc_container
+  #   environment:
+  #     - TZ=Asia/Taipei
+  #   networks:
+  #     - app-tier
+  #   image: add_rpc:v1
+  #   restart: always
+  #   ports:
+  #     - 8080:8080
+  # check_rpc:
+  #   container_name: check_rpc_container
+  #   environment:
+  #     - TZ=Asia/Taipei
+  #   networks:
+  #     - app-tier
+  #   image: check_rpc:v1
+  #   restart: always
+  #   ports:
+  #     - 8081:8081
