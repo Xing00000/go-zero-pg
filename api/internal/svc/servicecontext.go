@@ -16,8 +16,8 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
-		Config: c,
-		// Adder:   adder.NewAdder(zrpc.MustNewClient(c.Add)),       // 手动代码
+		Config:  c,
+		Adder:   adder.NewAdder(zrpc.MustNewClient(c.Add)),       // 手动代码
 		Checker: checker.NewChecker(zrpc.MustNewClient(c.Check)), // 手动代码
 	}
 }

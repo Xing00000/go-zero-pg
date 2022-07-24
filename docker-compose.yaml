@@ -16,12 +16,12 @@ volumes:
   node3-data:
 
 services:
-  node1:
+  etcd_node1:
     image: quay.io/coreos/etcd:v3.5.4
     volumes:
       - node1-data:/etcd-data
     ports:
-      - "12379:2379"
+      - 12379:2379
     expose:
       - 2379
       - 2380
@@ -30,6 +30,7 @@ services:
         ipv4_address: 172.16.238.100
     environment:
       - ETCDCTL_API=3
+      - TZ=Asia/Taipei
     command:
       - /usr/local/bin/etcd
       - --data-dir=/etcd-data
@@ -50,7 +51,7 @@ services:
       - --initial-cluster-token
       - docker-etcd
 
-  node2:
+  etcd_node2:
     image: quay.io/coreos/etcd:v3.5.4
     volumes:
       - node2-data:/etcd-data
@@ -59,8 +60,9 @@ services:
         ipv4_address: 172.16.238.101
     environment:
       - ETCDCTL_API=3
+      - TZ=Asia/Taipei
     ports:
-      - "12380:2379"
+      - 12380:2379
     expose:
       - 2379
       - 2380
@@ -84,7 +86,7 @@ services:
       - --initial-cluster-token
       - docker-etcd
 
-  node3:
+  etcd_node3:
     image: quay.io/coreos/etcd:v3.5.4
     volumes:
       - node3-data:/etcd-data
@@ -93,8 +95,9 @@ services:
         ipv4_address: 172.16.238.102
     environment:
       - ETCDCTL_API=3
+      - TZ=Asia/Taipei
     ports:
-      - "12381:2379"
+      - 12381:2379
     expose:
       - 2379
       - 2380
@@ -166,33 +169,33 @@ services:
     restart: always
     networks:
       - cluster_net
-  # api:
-  #   container_name: book_store_api_container
-  #   networks:
-  #     - app-tier
-  #   image: book_store_api:v1
-  #   environment:
-  #     - TZ=Asia/Taipei
-  #   restart: always
-  #   ports:
-  #     - 8888:8888
-  # add_rpc:
-  #   container_name: add_rpc_container
-  #   environment:
-  #     - TZ=Asia/Taipei
-  #   networks:
-  #     - app-tier
-  #   image: add_rpc:v1
-  #   restart: always
-  #   ports:
-  #     - 8080:8080
-  # check_rpc:
-  #   container_name: check_rpc_container
-  #   environment:
-  #     - TZ=Asia/Taipei
-  #   networks:
-  #     - app-tier
-  #   image: check_rpc:v1
-  #   restart: always
-  #   ports:
-  #     - 8081:8081
+  api:
+    container_name: book_store_api_container
+    networks:
+      - cluster_net
+    image: book_store_api:v1
+    environment:
+      - TZ=Asia/Taipei
+    restart: always
+    ports:
+      - 8888:8888
+  add_rpc:
+    container_name: add_rpc_container
+    environment:
+      - TZ=Asia/Taipei
+    networks:
+      - cluster_net
+    image: add_rpc:v1
+    restart: always
+    ports:
+      - 8080:8080
+  check_rpc:
+    container_name: check_rpc_container
+    environment:
+      - TZ=Asia/Taipei
+    networks:
+      - cluster_net
+    image: check_rpc:v1
+    restart: always
+    ports:
+      - 8081:8081
