@@ -9,8 +9,8 @@ networks:
       -
         subnet: 172.16.238.0/24
 volumes: 
-  # database-data: # named volumes can be managed easier using docker-compose
-  # redis-data:
+  database-data: # named volumes can be managed easier using docker-compose
+  redis-data:
   node1-data:
   node2-data:
   node3-data:
@@ -139,33 +139,33 @@ services:
   #     # - ETCD_INITIAL_CLUSTER_STATE=new                      # 初始化集群状态
   #     - ETCDCTL_API=3                                       # 升级api版本，使用最新的v3 API
   #     - TZ=Asia/Taipei
-  # postgres:
-  #   image: postgres:latest
-  #   networks:
-  #     - app-tier                # 使用的网络 --network
-  #   environment:
-  #     - POSTGRES_PASSWORD=postgrespw
-  #     - TZ=Asia/Taipei
-  #   ports:
-  #     - 5432:5432
-  #   volumes:
-  #     - database-data:/var/lib/postgresql/data
-  # redis:
-  #   image: redis:6.2.5
-  #   container_name: book_store_redis
-  #   ports:
-  #     - 6379:6379
-  #   environment:
-  #     # 时区上海 - Time zone Shanghai (Change if needed)
-  #     - TZ=Asia/Taipei
-  #   volumes:
-  #     # 数据文件 - data files
-  #     - redis-data:/data:rw
-  #   # command: "redis-server --requirepass G62m50oigInC30sf  --appendonly yes"
-  #   # privileged: true
-  #   restart: always
-  #   networks:
-  #     - app-tier
+  postgres:
+    image: postgres:latest
+    networks:
+      - cluster_net               # 使用的网络 --network
+    environment:
+      - POSTGRES_PASSWORD=postgrespw
+      - TZ=Asia/Taipei
+    ports:
+      - 5432:5432
+    volumes:
+      - database-data:/var/lib/postgresql/data
+  redis:
+    image: redis:6.2.5
+    container_name: book_store_redis
+    ports:
+      - 6379:6379
+    environment:
+      # 时区上海 - Time zone Shanghai (Change if needed)
+      - TZ=Asia/Taipei
+    volumes:
+      # 数据文件 - data files
+      - redis-data:/data:rw
+    # command: "redis-server --requirepass G62m50oigInC30sf  --appendonly yes"
+    # privileged: true
+    restart: always
+    networks:
+      - cluster_net
   # api:
   #   container_name: book_store_api_container
   #   networks:

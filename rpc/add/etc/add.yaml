@@ -2,11 +2,11 @@ Name: add.rpc
 ListenOn: 0.0.0.0:8080
 Etcd:
   Hosts:
-    - etcd:2379
+    - localhost:12379
   Key: add.rpc
 DataSource: postgres://postgres:postgrespw@postgres:5432/gozero?sslmode=disable
 Table: book
 Cache:
-  - Host: host.docker.internal:6379
+  - Host: localhost:6379
 Log:
   Level: error

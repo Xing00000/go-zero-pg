@@ -7,6 +7,6 @@ Etcd:
 DataSource: postgres://postgres:postgrespw@postgres:5432/gozero?sslmode=disable
 Table: book
 Cache:
-    - Host: localhost:6379
+  - Host: localhost:6379
 Log:
   Level: error
