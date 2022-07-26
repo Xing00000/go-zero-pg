@@ -1,12 +1,12 @@
 Name: check.rpc
 ListenOn: 0.0.0.0:8081
-Etcd:
-  Hosts:
-    - etcd_node1:2379
-  Key: check.rpc
-DataSource: postgres://postgres:postgrespw@postgres:5432/gozero?sslmode=disable
+# Etcd:
+#   Hosts:
+#     - etcd_node1:2379
+#   Key: check.rpc
+DataSource: postgres://postgres:postgrespw@127.0.0.1:5432/gozero?sslmode=disable
 Table: book
 Cache:
-  - Host: redis:6379
+  - Host: 127.0.0.1:6379
 Log:
   Level: error

@@ -1,15 +1,26 @@
 Name: bookstore-api
 Host: 0.0.0.0
 Port: 8888
-Add:
-  Etcd:
-    Hosts:
-      - etcd_node1:2379
-    Key: add.rpc
-Check:
-  Etcd:
-    Hosts:
-      - etcd_node1:2379
-    Key: check.rpc
+# Add:
+#   Etcd:
+#     Hosts:
+#       - etcd_node1:2379
+#     Key: add.rpc
+# Check:
+#   Etcd:
+#     Hosts:
+#       - etcd_node1:2379
+#     Key: check.rpc
 Log:
   Level: error
+
+  #rpc
+Add:
+  Endpoints:
+    - 127.0.0.1:8080
+  NonBlock: true
+
+Check:
+  Endpoints:
+    - 127.0.0.1:8081
+  NonBlock: true
